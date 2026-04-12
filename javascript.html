@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaScript CRUD - Pizzák</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #fafafa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #333; color: white; }
+        .form-container { background: white; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; }
+        input { padding: 8px; margin-right: 10px; }
+        button { padding: 8px 15px; cursor: pointer; background-color: #28a745; color: white; border: none; border-radius: 4px; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-edit { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+
+    <h1>Helyi Pizzatároló (JS Tömb CRUD)</h1>
+    <a href="index.html">Vissza a Főoldalra</a>
+
+    <div class="form-container">
+        <h3>Új pizza hozzáadása / Módosítás</h3>
+        <input type="hidden" id="pizzaId">
+        <input type="text" id="pizzaNev" placeholder="Pizza neve (pl. Hawaii)">
+        <input type="number" id="pizzaAr" placeholder="Ár (Ft)">
+        <button onclick="mentsPizza()">Mentés (Create/Update)</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Azonosító</th>
+                <th>Név</th>
+                <th>Ár (Ft)</th>
+                <th>Műveletek</th>
+            </tr>
+        </thead>
+        <tbody id="pizzaTableBody">
+            </tbody>
+    </table>
+
+    <script>
+        let pizzak = [
+            { id: 1, nev: "Margherita", ar: 1500 },
+            { id: 2, nev: "Sonkás", ar: 1700 },
+            { id: 3, nev: "Magyaros", ar: 1900 }
+        ];
+
+        function renderTable() {
+            const tbody = document.getElementById('pizzaTableBody');
+            tbody.innerHTML = ''; // Táblázat ürítése
+
+            pizzak.forEach(pizza => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${pizza.id}</td>
+                    <td>${pizza.nev}</td>
+                    <td>${pizza.ar} Ft</td>
+                    <td>
+                        <button class="btn-edit" onclick="szerkesztesBetoltese(${pizza.id})">Módosít</button>
+                        <button class="btn-delete" onclick="torolPizza(${pizza.id})">Töröl</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function mentsPizza() {
+            const idInput = document.getElementById('pizzaId').value;
+            const nevInput = document.getElementById('pizzaNev').value;
+            const arInput = document.getElementById('pizzaAr').value;
+
+            if (nevInput === '' || arInput === '') {
+                alert('Minden mezőt ki kell tölteni!');
+                return;
+            }
+
+            if (idInput === '') {
+                const ujId = pizzak.length > 0 ? Math.max(...pizzak.map(p => p.id)) + 1 : 1;
+                pizzak.push({ id: ujId, nev: nevInput, ar: parseInt(arInput) });
+            } else {
+                const index = pizzak.findIndex(p => p.id == idInput);
+                pizzak[index].nev = nevInput;
+                pizzak[index].ar = parseInt(arInput);
+            }
+
+            document.getElementById('pizzaId').value = '';
+            document.getElementById('pizzaNev').value = '';
+            document.getElementById('pizzaAr').value = '';
+            renderTable();
+        }
+
+        function szerkesztesBetoltese(id) {
+            const pizza = pizzak.find(p => p.id === id);
+            document.getElementById('pizzaId').value = pizza.id;
+            document.getElementById('pizzaNev').value = pizza.nev;
+            document.getElementById('pizzaAr').value = pizza.ar;
+        }
+
+        function torolPizza(id) {
+            if (confirm('Biztosan törölni szeretnéd ezt a pizzát?')) {
+                pizzak = pizzak.filter(p => p.id !== id);
+                renderTable();
+            }
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
