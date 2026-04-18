@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch API CRUD - Adatbázisból</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #fafafa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #333; color: white; }
+        .info-box { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .form-container { background: white; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; }
+        input { padding: 8px; margin-right: 10px; }
+        button { padding: 8px 15px; cursor: pointer; background-color: #28a745; color: white; border: none; border-radius: 4px; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-edit { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+
+    <h1>Adatbázisos Pizzatároló (Fetch API CRUD)</h1>
+    <a href="index.html">Vissza a Főoldalra</a>
+
+    <div class="info-box">
+        <p><strong>Rendszer üzenet:</strong> Ez az oldal a <code>pizzak.php</code> fájlon keresztül kommunikál a MySQL adatbázissal (C.R.U.D műveletek).</p>
+    </div>
+
+    <div class="form-container">
+        <h3>Új pizza hozzáadása / Módosítás</h3>
+        <input type="hidden" id="pizzaId">
+        <input type="text" id="pizzaNev" placeholder="Pizza neve">
+        <input type="number" id="pizzaAr" placeholder="Ár (Ft)">
+        <button onclick="mentsPizza()">Mentés</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Azonosító</th>
+                <th>Pizza Neve</th>
+                <th>Ár (Ft)</th>
+                <th>Műveletek</th>
+            </tr>
+        </thead>
+        <tbody id="pizzaTableBody">
+            <tr><td colspan="4">Adatok betöltése folyamatban...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        function pizzakLekerese() {
+            fetch('pizzak.php')
+                .then(res => res.json())
+                .then(adatok => {
+                    const tbody = document.getElementById('pizzaTableBody');
+                    tbody.innerHTML = '';
+                    if(adatok.error) return tbody.innerHTML = `<tr><td colspan="4">Hiba: ${adatok.error}</td></tr>`;
+                    if(adatok.length === 0) return tbody.innerHTML = `<tr><td colspan="4">Nincs adat.</td></tr>`;
+                    
+                    adatok.forEach(pizza => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${pizza.id}</td>
+                                <td>${pizza.nev}</td>
+                                <td>${pizza.ar} Ft</td>
+                                <td>
+                                    <button class="btn-edit" onclick="szerkesztesBetoltese(${pizza.id}, '${pizza.nev}', ${pizza.ar})">Módosít</button>
+                                    <button class="btn-delete" onclick="torolPizza(${pizza.id})">Töröl</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        function mentsPizza() {
+            const id = document.getElementById('pizzaId').value;
+            const nev = document.getElementById('pizzaNev').value;
+            const ar = document.getElementById('pizzaAr').value;
+
+            if(!nev || !ar) return alert("Minden mezőt tölts ki!");
+
+            const method = id ? 'PUT' : 'POST';
+            const payload = id ? { id: id, nev: nev, ar: ar } : { nev: nev, ar: ar };
+
+            fetch('pizzak.php', {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                document.getElementById('pizzaId').value = '';
+                document.getElementById('pizzaNev').value = '';
+                document.getElementById('pizzaAr').value = '';
+                pizzakLekerese();
+            });
+        }
+
+        // UPDATE (Betöltés az űrlapba)
+        function szerkesztesBetoltese(id, nev, ar) {
+            document.getElementById('pizzaId').value = id;
+            document.getElementById('pizzaNev').value = nev;
+            document.getElementById('pizzaAr').value = ar;
+        }
+
+        function torolPizza(id) {
+            if(!confirm("Biztosan törlöd?")) return;
+            fetch('pizzak.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            }).then(() => pizzakLekerese());
+        }
+
+        pizzakLekerese();
+    </script>
+</body>
+</html>
