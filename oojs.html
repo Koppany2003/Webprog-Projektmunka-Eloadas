@@ -15,6 +15,7 @@
 
     <h1>Mesteri Pizza Készítő (OOJS)</h1>
     <p>A pizzákat Objektumorientált JavaScript generálja a DOM-ba.</p>
+    <button onclick="ujPizzaSutese()" style="padding: 10px; background: #ff4500; color: white; border: none; cursor: pointer; margin-bottom: 20px;">+ Véletlenszerű Pizza Sütése</button>
     <div id="pizza-konyha" class="pizza-container"></div>
 
     <script>
@@ -89,7 +90,21 @@
 
         const hawaiiKukoricas = new Pizza("Vegetáriánus", 1500, ["Gomba", "Kukorica", "Paprika"]);
         hawaiiKukoricas.kirajzol();
+	function ujPizzaSutese() 
+	{
+    	const nevek = ["Hawaii", "Húsimádó", "Négysajtos", "Pokoli"];
+    	const feltetTipusok = ["Szalámi", "Gomba", "Kukorica", "Paprika"];
+    
+    	const randomNev = nevek[Math.floor(Math.random() * nevek.length)];
+    	const randomFeltetek = [];
+    	const db = Math.floor(Math.random() * 3) + 1; // 1-3 feltét
+    	for(let i=0; i<db; i++) {
+        randomFeltetek.push(feltetTipusok[Math.floor(Math.random() * feltetTipusok.length)]);
+    }
 
+    	const ujPizza = new Pizza(randomNev, 1800, randomFeltetek);
+    	ujPizza.kirajzol();
+	}
     </script>
 </body>
 </html>
