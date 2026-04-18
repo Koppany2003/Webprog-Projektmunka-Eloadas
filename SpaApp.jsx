@@ -2,108 +2,163 @@ import React, { useState } from 'react';
 
 function PizzaAmoba() {
   const [tepsi, setTepsi] = useState(Array(9).fill(null));
-  const [pizzaJon, setPizzaJon] = useState(true);
+  const [nyertes, setNyertes] = useState(null);
+  const [gepJon, setGepJon] = useState(false);
 
-  const kattintas = (index) => {
-    if (tepsi[index] || vanNyertes(tepsi)) return;
-    const ujTepsi = [...tepsi];
-    ujTepsi[index] = pizzaJon ? '🍕' : '🍍';
-    setTepsi(ujTepsi);
-    setPizzaJon(!pizzaJon);
-  };
-
-  const vanNyertes = (mezok) => {
-    const vonalak = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-    for (let i = 0; i < vonalak.length; i++) {
-      const [a, b, c] = vonalak[i];
-      if (mezok[a] && mezok[a] === mezok[b] && mezok[a] === mezok[c]) return mezok[a];
+  const vanNyertes = (m) => {
+    const v = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for (let i = 0; i < v.length; i++) {
+      const [a, b, c] = v[i];
+      if (m[a] && m[a] === m[b] && m[a] === m[c]) return m[a];
     }
     return null;
   };
 
-  const nyertes = vanNyertes(tepsi);
-  const teleTepsi = !tepsi.includes(null);
+  const kattintas = (i) => {
+    if (tepsi[i] || nyertes || gepJon) return;
+    const uj = [...tepsi];
+    uj[i] = '🍕';
+    setTepsi(uj);
+    let n = vanNyertes(uj);
+    if (n) { setNyertes(n); return; }
+    if (!uj.includes(null)) return;
+    setGepJon(true);
+    setTimeout(() => {
+      const ures = uj.map((v, idx) => v === null ? idx : null).filter(v => v !== null);
+      if(ures.length > 0) {
+        const r = ures[Math.floor(Math.random() * ures.length)];
+        uj[r] = '🍍';
+        setTepsi([...uj]);
+        n = vanNyertes(uj);
+        if (n) setNyertes(n);
+      }
+      setGepJon(false);
+    }, 600);
+  };
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h3>PizzAmőba 🍕 vs 🍍</h3>
-      <p><b>{nyertes ? `Nyertes: ${nyertes}` : teleTepsi ? 'Döntetlen!' : `Következik: ${pizzaJon ? '🍕' : '🍍'}`}</b></p>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 50px)', gap: '5px', justifyContent: 'center', margin: '20px auto' }}>
-        {tepsi.map((ertek, index) => (
-          <button key={index} onClick={() => kattintas(index)} style={{ width: '50px', height: '50px', fontSize: '24px', cursor: 'pointer' }}>
-            {ertek}
-          </button>
+    <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '1px solid #333' }}>
+      <h3 style={{ color: '#eee', marginBottom: '15px' }}>PizzAmőba</h3>
+      <div style={{ color: nyertes ? '#ff4444' : '#aaa', marginBottom: '15px', fontWeight: 'bold' }}>
+        {nyertes ? (nyertes === '🍕' ? 'Nyertél!' : 'Gép nyert!') : (gepJon ? '...' : 'Te jössz')}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 70px)', gap: '5px', justifyContent: 'center' }}>
+        {tepsi.map((v, i) => (
+          <button key={i} onClick={() => kattintas(i)} style={{ width: '70px', height: '70px', fontSize: '30px', background: '#222', border: '1px solid #444', color: 'white', cursor: 'pointer' }}>{v}</button>
         ))}
       </div>
-      <button onClick={() => setTepsi(Array(9).fill(null))}>Új játék</button>
+      <button onClick={() => {setTepsi(Array(9).fill(null)); setNyertes(null);}} style={{ marginTop: '20px', padding: '10px', background: '#444', color: 'white', border: '1px solid #666', cursor: 'pointer' }}>Új játék</button>
     </div>
   );
 }
 
 function Szamologep() {
-  const [szam1, setSzam1] = useState('');
-  const [szam2, setSzam2] = useState('');
-  const [eredmeny, setEredmeny] = useState(null);
+  const [kijelzo, setKijelzo] = useState('0');
+  const [folyamat, setFolyamat] = useState('');
+  const [elozoErtek, setElozoErtek] = useState(null);
+  const [muvelet, setMuvelet] = useState(null);
+  const [ujSzam, setUjSzam] = useState(true);
 
-  const szamol = (muvelet) => {
-    const a = parseFloat(szam1);
-    const b = parseFloat(szam2);
-    if (isNaN(a) || isNaN(b)) {
-      setEredmeny('Kérlek adj meg érvényes számokat!');
-      return;
+  const szamKatt = (n) => {
+    if (ujSzam) {
+      setKijelzo(String(n));
+      setUjSzam(false);
+    } else {
+      setKijelzo(kijelzo === '0' ? String(n) : kijelzo + n);
     }
-    if (muvelet === '+') setEredmeny(a + b);
-    if (muvelet === '-') setEredmeny(a - b);
-    if (muvelet === '*') setEredmeny(a * b);
-    if (muvelet === '/') setEredmeny(b !== 0 ? a / b : 'Nullával nem osztunk!');
+  };
+
+  const muveletKatt = (m) => {
+    const aktualis = parseFloat(kijelzo);
+    setElozoErtek(aktualis);
+    setMuvelet(m);
+    setFolyamat(`${aktualis} ${m}`);
+    setUjSzam(true);
+  };
+
+  const egyenloKatt = () => {
+    if (muvelet === null || elozoErtek === null) return;
+    const aktualis = parseFloat(kijelzo);
+    let eredmeny = 0;
+    
+    if (muvelet === '+') eredmeny = elozoErtek + aktualis;
+    if (muvelet === '-') eredmeny = elozoErtek - aktualis;
+    if (muvelet === '*') eredmeny = elozoErtek * aktualis;
+    if (muvelet === '/') eredmeny = aktualis !== 0 ? elozoErtek / aktualis : 'Hiba';
+
+    setFolyamat(`${elozoErtek} ${muvelet} ${aktualis} =`);
+    setKijelzo(String(eredmeny));
+    setMuvelet(null);
+    setElozoErtek(null);
+    setUjSzam(true);
+  };
+
+  const torles = () => {
+    setKijelzo('0');
+    setFolyamat('');
+    setElozoErtek(null);
+    setMuvelet(null);
+    setUjSzam(true);
+  };
+
+  const visszatorles = () => {
+    if (ujSzam) return;
+    setKijelzo(kijelzo.length > 1 ? kijelzo.slice(0, -1) : '0');
+  };
+
+  const gombStilus = {
+    background: '#222',
+    color: '#fff',
+    border: '1px solid #444',
+    fontSize: '1.2rem',
+    padding: '15px',
+    cursor: 'pointer',
+    borderRadius: '4px'
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h3>Alap Számológép</h3>
-      <input type="number" value={szam1} onChange={(e) => setSzam1(e.target.value)} placeholder="Első szám" style={{ margin: '5px' }} />
-      <br />
-      <input type="number" value={szam2} onChange={(e) => setSzam2(e.target.value)} placeholder="Második szám" style={{ margin: '5px' }} />
-      <br />
-      <div style={{ margin: '15px 0' }}>
-        <button onClick={() => szamol('+')} style={{ margin: '2px', padding: '5px 15px' }}>+</button>
-        <button onClick={() => szamol('-')} style={{ margin: '2px', padding: '5px 15px' }}>-</button>
-        <button onClick={() => szamol('*')} style={{ margin: '2px', padding: '5px 15px' }}>*</button>
-        <button onClick={() => szamol('/')} style={{ margin: '2px', padding: '5px 15px' }}>/</button>
+    <div style={{ background: '#000', width: '280px', padding: '10px', borderRadius: '5px', border: '1px solid #333' }}>
+      {/* Kijelző */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #444', padding: '10px', marginBottom: '10px', textAlign: 'right' }}>
+        <div style={{ color: '#888', fontSize: '0.8rem', minHeight: '1.2rem' }}>{folyamat}</div>
+        <div style={{ color: '#fff', fontSize: '2rem', overflow: 'hidden' }}>{kijelzo}</div>
       </div>
-      <h4>Eredmény: {eredmeny !== null ? eredmeny : '-'}</h4>
+
+      {/* Gombok */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+        <button style={gombStilus} onClick={torles}>C</button>
+        <button style={gombStilus}>%</button>
+        <button style={gombStilus}>+/-</button>
+        <button style={gombStilus} onClick={visszatorles}>⌫</button>
+        
+        {[7,8,9].map(n => <button key={n} style={gombStilus} onClick={() => szamKatt(n)}>{n}</button>)}
+        <button style={gombStilus} onClick={() => muveletKatt('/')}>÷</button>
+        
+        {[4,5,6].map(n => <button key={n} style={gombStilus} onClick={() => szamKatt(n)}>{n}</button>)}
+        <button style={gombStilus} onClick={() => muveletKatt('*')}>×</button>
+        
+        {[1,2,3].map(n => <button key={n} style={gombStilus} onClick={() => szamKatt(n)}>{n}</button>)}
+        <button style={gombStilus} onClick={() => muveletKatt('-')}>-</button>
+        
+        <button style={{...gombStilus, gridColumn: 'span 2'}} onClick={() => szamKatt(0)}>0</button>
+        <button style={gombStilus} onClick={() => { if(!kijelzo.includes('.')) setKijelzo(kijelzo + '.') }}>.</button>
+        <button style={{...gombStilus, background: '#333'}} onClick={egyenloKatt}>=</button>
+        <button style={{...gombStilus, gridColumn: '4', gridRow: '5', height: '60px'}} onClick={() => muveletKatt('+')}>+</button>
+      </div>
     </div>
   );
 }
 
 export default function SpaApp() {
-  const [aktivJatek, setAktivJatek] = useState('amoba'); // Alapértelmezetten az amőba tölt be
-
+  const [lap, setLap] = useState('amoba');
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '20px auto' }}>
-      <h2>React Egyoldalas Alkalmazás (SPA)</h2>
-      
-      {/* Menü a két játék közötti váltáshoz */}
-      <div style={{ marginBottom: '20px', padding: '10px', background: '#f4f4f4', borderRadius: '5px', textAlign: 'center' }}>
-        <button 
-          onClick={() => setAktivJatek('amoba')} 
-          style={{ marginRight: '10px', fontWeight: aktivJatek === 'amoba' ? 'bold' : 'normal' }}
-        >
-          PizzAmőba Játék
-        </button>
-        <button 
-          onClick={() => setAktivJatek('szamologep')}
-          style={{ fontWeight: aktivJatek === 'szamologep' ? 'bold' : 'normal' }}
-        >
-          Számológép
-        </button>
+    <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'monospace' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+        <button onClick={() => setLap('amoba')} style={{ padding: '10px', background: lap === 'amoba' ? '#444' : '#222', color: 'white', border: '1px solid #555', cursor: 'pointer' }}>Amőba</button>
+        <button onClick={() => setLap('szamologep')} style={{ padding: '10px', background: lap === 'szamologep' ? '#444' : '#222', color: 'white', border: '1px solid #555', cursor: 'pointer' }}>Számológép</button>
       </div>
-
-      {/* Itt dől el, melyik komponens rajzolódik ki (SPA logika) */}
-      <div>
-        {aktivJatek === 'amoba' && <PizzaAmoba />}
-        {aktivJatek === 'szamologep' && <Szamologep />}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {lap === 'amoba' ? <PizzaAmoba /> : <Szamologep />}
       </div>
     </div>
   );
